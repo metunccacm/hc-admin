@@ -35,4 +35,25 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Supabase Configuration
+    |--------------------------------------------------------------------------
+    */
+    'supabase' => [
+        'api_url' => env('SUPABASE_API_URL', 'https://supa-api.hocamconnect.com.tr'),
+        'api_key' => env('SUPABASE_API_KEY'),
+        'storage_bucket' => env('SUPABASE_STORAGE_BUCKET', 'delivery'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Configuration
+    |--------------------------------------------------------------------------
+    */
+    'admin' => [
+        'username' => env('ADMIN_USERNAME', 'admin'),
+        'password' => env('ADMIN_PASSWORD', 'admin123'),
+    ],
+
 ];
