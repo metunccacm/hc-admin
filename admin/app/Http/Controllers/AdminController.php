@@ -102,10 +102,28 @@ class AdminController extends Controller
                 ->withErrors(['error' => 'Restoran bulunamadı.']);
         }
 
-        // Parse working hours if it's a JSON string
+        // Parse working hours if it's a JSON string and convert to form-friendly format
         $workingHours = $restaurant['working_hours'] ?? null;
         if (is_string($workingHours)) {
             $workingHours = json_decode($workingHours, true);
+        }
+        
+        // Convert working hours from Supabase format to form format
+        $workingHoursForForm = [];
+        $days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+        foreach ($days as $day) {
+            if (isset($workingHours[$day])) {
+                $value = $workingHours[$day];
+                if ($value === 'Kapalı' || strtolower($value) === 'kapalı') {
+                    $workingHoursForForm[$day] = ['open' => '', 'close' => '', 'closed' => true];
+                } elseif (preg_match('/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/', $value, $matches)) {
+                    $workingHoursForForm[$day] = ['open' => $matches[1], 'close' => $matches[2], 'closed' => false];
+                } else {
+                    $workingHoursForForm[$day] = ['open' => '', 'close' => '', 'closed' => false];
+                }
+            } else {
+                $workingHoursForForm[$day] = ['open' => '', 'close' => '', 'closed' => false];
+            }
         }
 
         // Parse menu URLs
@@ -117,7 +135,7 @@ class AdminController extends Controller
         $averageRating = $this->supabase->getAverageRating($id);
         $reviewCount = $this->supabase->getReviewCount($id);
 
-        return view('admin.restaurants.edit', compact('restaurant', 'workingHours', 'menuUrls', 'averageRating', 'reviewCount'));
+        return view('admin.restaurants.edit', compact('restaurant', 'workingHoursForForm', 'menuUrls', 'averageRating', 'reviewCount'));
     }
 
     /**
@@ -161,20 +179,28 @@ class AdminController extends Controller
             $updateData['password'] = $request->input('password');
         }
 
-        // Handle working hours
+        // Handle working hours - Convert to Supabase format (simple strings)
         $workingHours = [];
         $days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
         $workingHoursInput = $request->input('working_hours', []);
         
         foreach ($days as $index => $day) {
             $dayHours = $workingHoursInput[$index] ?? [];
-            $workingHours[$day] = [
-                'open' => $dayHours['open'] ?? '',
-                'close' => $dayHours['close'] ?? '',
-                'closed' => isset($dayHours['closed']) && $dayHours['closed'] === '1',
-            ];
+            $isClosed = isset($dayHours['closed']) && $dayHours['closed'] === '1';
+            
+            if ($isClosed) {
+                $workingHours[$day] = 'Kapalı';
+            } else {
+                $open = $dayHours['open'] ?? '';
+                $close = $dayHours['close'] ?? '';
+                if ($open && $close) {
+                    $workingHours[$day] = "{$open} - {$close}";
+                } else {
+                    $workingHours[$day] = 'Kapalı';
+                }
+            }
         }
-        $updateData['working_hours'] = json_encode($workingHours);
+        $updateData['working_hours'] = $workingHours;
 
         // Handle logo upload
         if ($request->hasFile('logo')) {
