@@ -183,6 +183,16 @@ class SupabaseService
     {
         $fileName = time() . '_' . $file->getClientOriginalName();
         $fullPath = "{$path}/{$fileName}";
+        $uploadUrl = "{$this->apiUrl}/storage/v1/object/{$this->storageBucket}/{$fullPath}";
+
+        \Log::info('Attempting file upload to Supabase', [
+            'file_name' => $fileName,
+            'path' => $path,
+            'full_path' => $fullPath,
+            'mime_type' => $file->getMimeType(),
+            'upload_url' => $uploadUrl,
+            'bucket' => $this->storageBucket
+        ]);
 
         $response = Http::withHeaders([
             'Authorization' => "Bearer {$this->apiKey}",
@@ -190,11 +200,22 @@ class SupabaseService
         ])->withBody(
             file_get_contents($file->getRealPath()),
             $file->getMimeType()
-        )->post("{$this->apiUrl}/storage/v1/object/{$this->storageBucket}/{$fullPath}");
+        )->post($uploadUrl);
 
         if ($response->successful()) {
-            return "{$this->apiUrl}/storage/v1/object/public/{$this->storageBucket}/{$fullPath}";
+            $publicUrl = "{$this->apiUrl}/storage/v1/object/public/{$this->storageBucket}/{$fullPath}";
+            \Log::info('File upload successful', [
+                'public_url' => $publicUrl
+            ]);
+            return $publicUrl;
         }
+
+        \Log::error('File upload failed', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+            'headers' => $response->headers(),
+            'full_path' => $fullPath
+        ]);
 
         return null;
     }

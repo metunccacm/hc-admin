@@ -185,6 +185,9 @@ class RestaurantController extends Controller
             $logoUrl = $this->supabase->uploadFile($request->file('logo'), "{$restaurantName}/logo");
             if ($logoUrl) {
                 $updateData['logo_url'] = $logoUrl;
+            } else {
+                \Log::error('Logo upload failed for restaurant', ['restaurant_id' => $restaurantId]);
+                return back()->withErrors(['logo' => 'Logo yükleme başarısız. Lütfen Supabase storage politikalarını kontrol edin.'])->withInput();
             }
         }
 
@@ -196,12 +199,21 @@ class RestaurantController extends Controller
             }
 
             $restaurantName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $restaurant['name']);
-            foreach ($request->file('menus') as $menu) {
+            $uploadErrors = [];
+            foreach ($request->file('menus') as $index => $menu) {
                 $menuUrl = $this->supabase->uploadFile($menu, "{$restaurantName}/menu");
                 if ($menuUrl) {
                     $existingMenus[] = $menuUrl;
+                } else {
+                    $uploadErrors[] = "Menü " . ($index + 1);
                 }
             }
+            
+            if (!empty($uploadErrors)) {
+                \Log::error('Menu uploads failed', ['restaurant_id' => $restaurantId, 'failed' => $uploadErrors]);
+                return back()->withErrors(['menus' => 'Bazı menüler yüklenemedi: ' . implode(', ', $uploadErrors) . '. Supabase storage politikalarını kontrol edin.'])->withInput();
+            }
+            
             $updateData['menu_urls'] = $existingMenus;
         }
 
