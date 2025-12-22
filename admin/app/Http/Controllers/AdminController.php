@@ -114,9 +114,18 @@ class AdminController extends Controller
         foreach ($days as $day) {
             if (isset($workingHours[$day])) {
                 $value = $workingHours[$day];
-                if ($value === 'Kapalı' || strtolower($value) === 'kapalı') {
+                // Handle old nested format (array with open/close/closed)
+                if (is_array($value)) {
+                    $workingHoursForForm[$day] = [
+                        'open' => $value['open'] ?? '',
+                        'close' => $value['close'] ?? '',
+                        'closed' => $value['closed'] ?? false
+                    ];
+                }
+                // Handle new string format
+                elseif (is_string($value) && ($value === 'Kapalı' || strtolower($value) === 'kapalı')) {
                     $workingHoursForForm[$day] = ['open' => '', 'close' => '', 'closed' => true];
-                } elseif (preg_match('/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/', $value, $matches)) {
+                } elseif (is_string($value) && preg_match('/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/', $value, $matches)) {
                     $workingHoursForForm[$day] = ['open' => $matches[1], 'close' => $matches[2], 'closed' => false];
                 } else {
                     $workingHoursForForm[$day] = ['open' => '', 'close' => '', 'closed' => false];

@@ -124,10 +124,29 @@
                             <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                                 <span class="font-medium text-gray-700">{{ $day }}</span>
                                 @if(isset($workingHours[$day]))
-                                    @if($workingHours[$day] === 'Kapalı' || strtolower($workingHours[$day]) === 'kapalı')
+                                    @php
+                                        $value = $workingHours[$day];
+                                        $isClosed = false;
+                                        $displayValue = '';
+                                        
+                                        if (is_string($value)) {
+                                            $isClosed = ($value === 'Kapalı' || strtolower($value) === 'kapalı');
+                                            $displayValue = $value;
+                                        } elseif (is_array($value)) {
+                                            // Handle old nested format
+                                            $isClosed = $value['closed'] ?? false;
+                                            if (!$isClosed && isset($value['open']) && isset($value['close'])) {
+                                                $displayValue = $value['open'] . ' - ' . $value['close'];
+                                            }
+                                        }
+                                    @endphp
+                                    
+                                    @if($isClosed)
                                         <span class="text-red-500 font-medium">Kapalı</span>
+                                    @elseif($displayValue)
+                                        <span class="text-gray-900">{{ $displayValue }}</span>
                                     @else
-                                        <span class="text-gray-900">{{ $workingHours[$day] }}</span>
+                                        <span class="text-gray-400">Belirtilmemiş</span>
                                     @endif
                                 @else
                                     <span class="text-gray-400">Belirtilmemiş</span>
