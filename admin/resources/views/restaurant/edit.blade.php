@@ -108,7 +108,7 @@
                 <div class="space-y-4">
                     @foreach(['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'] as $index => $day)
                         @php
-                            $dayHours = $workingHours[$day] ?? ['open' => '', 'close' => '', 'closed' => false];
+                            $dayHours = $workingHoursForForm[$day] ?? ['open' => '', 'close' => '', 'closed' => false];
                         @endphp
                         <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                             <span class="w-28 font-medium text-gray-700">{{ $day }}</span>
