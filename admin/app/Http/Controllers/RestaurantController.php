@@ -31,6 +31,14 @@ class RestaurantController extends Controller
         $averageRating = $this->supabase->getAverageRating($restaurantId);
         $reviewCount = $this->supabase->getReviewCount($restaurantId);
         $reviews = $this->supabase->getRestaurantReviews($restaurantId);
+        
+        // Log for debugging
+        \Log::info('Restaurant Dashboard Data', [
+            'restaurant_id' => $restaurantId,
+            'review_count' => $reviewCount,
+            'average_rating' => $averageRating,
+            'reviews_fetched' => count($reviews)
+        ]);
 
         // Parse working hours if it's a JSON string
         $workingHours = $restaurant['working_hours'] ?? null;
@@ -153,7 +161,14 @@ class RestaurantController extends Controller
                 }
             }
         }
+        // Note: working_hours is sent as an array, Laravel HTTP client will handle JSON encoding
         $updateData['working_hours'] = $workingHours;
+
+        // Log the update data for debugging
+        \Log::info('Updating restaurant', [
+            'restaurant_id' => $restaurantId,
+            'update_data' => $updateData
+        ]);
 
         // Handle logo upload
         if ($request->hasFile('logo')) {
@@ -191,7 +206,12 @@ class RestaurantController extends Controller
                 ->with('success', 'Profil başarıyla güncellendi.');
         }
 
-        return back()->withErrors(['error' => 'Profil güncellenirken bir hata oluştu.']);
+        \Log::error('Restaurant update failed', [
+            'restaurant_id' => $restaurantId,
+            'update_data' => $updateData
+        ]);
+        
+        return back()->withErrors(['error' => 'Profil güncellenirken bir hata oluştu. Lütfen Supabase politikalarını kontrol edin.']);
     }
 
     /**

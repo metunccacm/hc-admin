@@ -80,8 +80,22 @@ class SupabaseService
      */
     public function updateRestaurant(string $id, array $data): bool
     {
+        \Log::info('Supabase update request', [
+            'id' => $id,
+            'data' => $data
+        ]);
+
         $response = Http::withHeaders($this->getHeaders())
             ->patch("{$this->apiUrl}/rest/v1/restaurants?id=eq.{$id}", $data);
+
+        if (!$response->successful()) {
+            \Log::error('Supabase update failed', [
+                'id' => $id,
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'headers' => $response->headers()
+            ]);
+        }
 
         return $response->successful();
     }
@@ -109,7 +123,21 @@ class SupabaseService
                 'order' => 'created_at.desc'
             ]);
 
-        return $response->successful() ? $response->json() : [];
+        if (!$response->successful()) {
+            \Log::error('Failed to fetch restaurant reviews', [
+                'restaurant_id' => $restaurantId,
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+        }
+
+        $data = $response->successful() ? $response->json() : [];
+        \Log::info('Fetched restaurant reviews', [
+            'restaurant_id' => $restaurantId,
+            'count' => count($data)
+        ]);
+        
+        return $data;
     }
 
     /**

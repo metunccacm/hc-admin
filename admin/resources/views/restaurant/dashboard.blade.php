@@ -193,7 +193,7 @@
                             <div class="flex items-start justify-between mb-2">
                                 <div class="flex-1">
                                     <div class="flex items-center space-x-2 mb-1">
-                                        <h4 class="font-semibold text-gray-900">{{ $review['user_name'] ?? 'Anonim Kullanıcı' }}</h4>
+                                        <h4 class="font-semibold text-gray-900">Kullanıcı {{ substr($review['user_id'] ?? 'Anonim', 0, 8) }}</h4>
                                         <div class="flex items-center">
                                             @for($i = 1; $i <= 5; $i++)
                                                 <svg class="h-4 w-4 {{ $i <= ($review['rating'] ?? 0) ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
@@ -203,8 +203,8 @@
                                             <span class="ml-1 text-sm text-gray-600">({{ $review['rating'] ?? 0 }})</span>
                                         </div>
                                     </div>
-                                    @if(isset($review['comment']) && $review['comment'])
-                                        <p class="text-gray-700 text-sm">{{ $review['comment'] }}</p>
+                                    @if(isset($review['review_text']) && $review['review_text'])
+                                        <p class="text-gray-700 text-sm">{{ $review['review_text'] }}</p>
                                     @endif
                                 </div>
                                 <span class="text-xs text-gray-500 ml-4">
