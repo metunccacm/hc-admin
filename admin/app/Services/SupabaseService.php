@@ -44,7 +44,19 @@ class SupabaseService
             ]);
 
         $data = $response->successful() ? $response->json() : [];
-        return !empty($data) ? $data[0] : null;
+        $restaurant = !empty($data) ? $data[0] : null;
+        
+        // Log what we got from Supabase
+        if ($restaurant) {
+            \Log::info('Restaurant fetched from Supabase', [
+                'id' => $id,
+                'has_working_hours' => isset($restaurant['working_hours']),
+                'working_hours_type' => isset($restaurant['working_hours']) ? gettype($restaurant['working_hours']) : 'not set',
+                'working_hours_value' => $restaurant['working_hours'] ?? null
+            ]);
+        }
+        
+        return $restaurant;
     }
 
     /**
